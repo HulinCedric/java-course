@@ -1,13 +1,27 @@
 //
-// Annee 2009_2010 - Module Java - Charte tests unitaires / Tests.java
+// Annee 2009_2010 - Module Java - Charte tests unitaires
 //
-// Utilitaires de tests - Classe Tests - Version 2.1.0
+// Utilitaires de tests - Classe Tests
 //
 // Version 2.0.0    : version initiale complète
 // Version 2.0.1    : formattage des commentaires pour impression
-// Version 2.1.0    : correction du bug verboseLevel (ligne 111 ) +
-//                    correction du bug statusDesign (ligne 100 ) +
-//                    la classe devient abstraite
+// Version 2.1.0    : correction du bug verboseLevel (ligne 111)
+//                    + correction du bug statusDesign (ligne 100)
+//                    + la classe devient abstraite
+// Version 2.2.0    : modification de la methode Unit pour gerer les
+//                    references nulles
+//                    + suppression de la methode main (module de tests
+//                    unitaires externalise)
+// Version 2.3.0    : introduction d'une extension de la methode Case
+// Version 2.4.0    : prise en compte des types primitifs int et double
+//                    par la methode Unit
+// Version 2.5.0    : introduction d'une forme polymorphe de la
+//                    methode Unit pour autoriser une marge d'erreur
+// Version 2.6.0    : introduction d'une forme polymorphe de la
+//                    methode Unit pour autoriser le controle global de
+//                    deux tableaux pris dans leur ensemble
+// Version 2.7.0    : methode Unit pour autoriser le controle global de
+//                    deux glossaires pris dans leur ensemble (IE_1 / Ex_5)
 //
 /**
  *
@@ -26,7 +40,11 @@
  * End      : fin d'exécution des tests unitaires de la classe cible.
  *
  * @author Alain Thuaire
+ *
 **/
+
+import java.util.*;
+
 abstract public class Tests {
 private static int levelDesign;		// Numero d'ordre du test_design 
 private static int levelCase;		// Numero d'ordre du test_case
@@ -68,11 +86,11 @@ private static String  caseName;	// Nom du test case courant;
    String lastLine= "\n------------------------------------------------------------\n";
       
       // Visualiser le CR dernier test case et dernier test design
-      //
+   	  //
       visuCR("Case"); visuCR("Design"); 
       
       // Visualiser la ligne de cloture des tests unitaires
-      //
+   	  //
       if (statusDesign == 0) System.out.println(lastLine);
       else System.out.println();
       
@@ -157,6 +175,20 @@ private static String  caseName;	// Nom du test case courant;
       //  
       visuEntete();
    }
+   
+   public static void Case (String name, int level) {
+      
+      // Modifier le niveau verbose courant
+      //  
+      verboseLevel=level;
+      if (level > 3) verboseLevel=3;
+      if (level < 0) verboseLevel=0;
+      
+      // Appliquer la methode d'origine
+      // 
+      Case(name); 
+   }
+   
  
  /**
  *
@@ -174,23 +206,188 @@ private static String  caseName;	// Nom du test case courant;
       //
       if (!valid("Begin") || !valid("Design") || !valid("Case")) System.exit(1);	  
   
-      // Visualiser les messages du test de plus niveau
+      // Visualiser les messages du test de ce niveau
       // 
-      visuEntete(attendu, obtenu); 	  
+      visuEntete(attendu, obtenu);
 
       // Elaborer le CR du test case courant
       //  
-      if (statusCase == 0 && !obtenu.equals(attendu)) statusCase=levelCase;
-      else statusCase=0;
+      if (statusCase != 0 ||(obtenu==null && attendu ==null)) return;
+      
+      if((obtenu==null && attendu !=null) ||
+         (obtenu!=null && attendu ==null) || 
+         !obtenu.equals(attendu))             statusCase=levelCase;
       
       // Elaborer le CR du test design courant
       //  
       if (statusDesign == 0 && statusCase != 0) statusDesign=statusCase;
    }
+   
+   public static void Unit (int attendu, int obtenu) {
+
+      // Effectuer un "boxing" des deux parametres
+      //
+      Unit(new Integer(attendu), new Integer(obtenu));	  
+   }
+   
+   public static void Unit (double attendu, double obtenu) {
+
+      // Effectuer un "boxing" des deux parametres
+      //
+      Unit(new Double(attendu), new Double(obtenu));	
+   }
+
+   public static void Unit (double attendu, double obtenu, double epsilon) {
+
+      // Controler les conditions initiales requises par la charte
+      //
+      if (!valid("Begin") || !valid("Design") || !valid("Case")) System.exit(1);	  
+  
+      // Visualiser les messages du test de ce niveau
+      // 
+      visuEntete(new Double(attendu), new Double(obtenu));
+
+      // Elaborer le CR du test case courant
+      //  
+      if (statusCase != 0) return;
+      if (Math.abs(attendu-obtenu) > Math.abs(epsilon)) statusCase=levelCase;
+
+      // Elaborer le CR du test design courant
+      //  
+      if (statusDesign == 0 && statusCase != 0) statusDesign=statusCase;
+   }
+   
+   public static void Unit (Object[] attendu, Object[] obtenu) {
+
+      // Controler les conditions initiales requises par la charte
+      //
+      if (!valid("Begin") || !valid("Design") || !valid("Case")) System.exit(1);	  
+  
+      // Visualiser les messages du test de ce niveau
+      // 
+      visuEntete(attendu, obtenu);
+
+      // Elaborer le CR du test case courant
+      // 
+      if (statusCase != 0 ||(obtenu==null && attendu ==null)) return;
+      
+      if((obtenu==null && attendu !=null) ||
+         (obtenu!=null && attendu ==null)    )  statusCase=levelCase;
+         
+      else {
+      	      
+      	 String classeAttendue, classeObtenue;
+      	  
+      	 // Traiter le cas de tableaux de tailles differentes
+      	 //
+      	 if (attendu.length != obtenu.length) statusCase=levelCase;
+      	
+      	 // Analyser tous les elements deux a deux
+      	 //
+         else for (int i=0;i <attendu.length; i++) {
+         	
+                 // Traiter le cas particulier de deux references nulles
+                 //
+                 if (attendu[i] == null && obtenu[i] == null) continue;
+            
+                 // Traiter le cas particulier d'une reference nulle seulement
+                 //
+        	     if ((attendu[i]== null && obtenu[i] != null)  ||
+           	         (attendu[i] != null && obtenu[i] == null)) {
+                    statusCase=levelCase;
+           	        break;
+           	     }
+           	
+           	    // Controler les deux classes d'origine
+           	    //
+           	    classeAttendue= attendu[i].getClass().getName();
+           	    classeObtenue = obtenu[i].getClass().getName();
+           	    if (!classeAttendue.equals(classeObtenue)) {
+           	       statusCase=levelCase;
+           	       break;
+           	    }
+           	
+           	    // Controler les deux valeurs courante
+           	    //
+                if (!attendu[i].equals(obtenu[i])) {
+           	       statusCase=levelCase;
+           	       break;
+           	    }
+             }
+         }
+      
+      // Elaborer le CR du test design courant
+      //  
+      if (statusDesign == 0 && statusCase != 0) statusDesign=statusCase;
+   }
+   
+   public static void Unit (HashMap attendu, HashMap obtenu) {
+
+      // Controler les conditions initiales requises par la charte
+      //
+      if (!valid("Begin") || !valid("Design") || !valid("Case")) System.exit(1);	  
+  
+      // Visualiser les messages du test de ce niveau
+      // 
+      visuEntete(attendu, obtenu);
+
+      // Elaborer le CR du test case courant
+      // 
+      if (statusCase != 0 ||(obtenu==null && attendu ==null)) return;
+      
+      if((obtenu==null && attendu !=null) ||
+         (obtenu!=null && attendu ==null)    )  statusCase=levelCase;
+         
+      else {
+      	  
+      	 // Traiter le cas de glossaires de tailles differentes
+      	 //
+      	 if (attendu.size() != obtenu.size()) statusCase=levelCase;
+         else {
+         	
+         	// Controler l'egalite de l'ensemble des associations
+      	    //
+         	Set s1= attendu.entrySet();
+         	Set s2= obtenu.entrySet();
+         	if (!s1.equals(s2)) statusCase=levelCase;
+         	else {
+         		
+               // Parcourir l'ensemble des associations du glossaire attendu
+      	       //	
+      	       Iterator i= attendu.keySet().iterator();
+      	       Object cle, associe;
+      	    
+      	       while (i.hasNext()) {
+      	       	
+      	       	  // Controler la classe de chaque cle
+      	          //
+      	          cle= i.next();
+      	          if (cle.getClass().getName() != "java.lang.String") {
+      	              statusCase=levelCase;
+      	              break;
+      	          }
+      	          
+      	          // Controler la classe de chaque associe
+      	          //
+      	          associe= attendu.get(cle);
+      	          if (associe.getClass().getName() != "java.lang.String") {
+      	              statusCase=levelCase;
+      	              break;
+      	          }
+      	       }	
+         	}
+         }
+      }
+      
+      // Elaborer le CR du test design courant
+      //  
+      if (statusDesign == 0 && statusCase != 0) statusDesign=statusCase;
+   }
+   
 /**
  *
- * La méthode privée valid vérifie les conditions d'exécution du niveau 
- * de tests passé en paramètre.
+ * La methode privee valid vérifie les conditions d'execution du niveau 
+ * de tests passe en parametre.
  * 
 **/
    private static boolean valid (String level) {
@@ -289,68 +486,5 @@ private static String  caseName;	// Nom du test case courant;
       	 if (verboseLevel == 1 && statusDesign != 0) System.out.print(beginPartDesign + statusDesign + LF);
          else System.out.print(LF + beginPartDesign + statusDesign + LF);
       }
-   }
-   
-/**
- *
- * Module de tests unitaires de la classe Tests.
- * 
-**/
-
-   public static void main (String[] args) {
-        
-      Begin("Tests", "2.0.0");
-
-      Design("Visualisation de niveau 0", 0);
-         
-         Case("C1 : 2 TU OK");			
-            Unit("x", "x");
-            Unit(new Integer(0), new Integer(0));
-      			       
-      Design("Visualisation de niveau 1", 1);		
-  
-         Case("C1 : 1 TU OK");
-            Unit("niveau 1", "niveau 1");
-            Unit(new Integer(1), new Integer(1));
-
-      Design("Visualisation de niveau 2", 2);		
-  
-         Case("C1 : 2 TU OK");
-            Unit("xxx", "xxx");
-            Unit(new Integer(2), new Integer(2));
-
-         Case("C2 : 3 TU OK");
-            Unit("niveau 1", "niveau 1");
-            Unit(new Integer(1), new Integer(1));
-            Unit(new Integer(-1), new Integer(-1));  
-
-      Design("Visualisation de niveau 3", 3);		
-  
-         Case("C1 : 3 TU OK");
-            Unit("......", "......");
-            Unit(new Integer(3), new Integer(3));
-            Unit(new Float(3), new Float(3));
-
-         Case("C2 : 2 TU OK");
-            Unit("xxxxx", "xxxxx");
-            Unit(new Integer(-3), new Integer(-3)); 
-            
-         Case("C3 : 1 TU OK");
-            Unit(new Float(-3), new Float(-3));  
-      
-      Design("Visualisation de niveau 3 avec TU NOK", 3);		
-  
-         Case("C1 : 2 TU OK");
-            Unit("......", "......");
-            Unit(new Integer(4), new Integer(4));
-
-         Case("C2 : 1 TU NOK");
-            Unit(new Float(-4.0), new Float(-4.01)); 
-            
-         Case("C3 : 1 TU OK");
-            Unit(new Double(-4.25), new Double(-4.25));
-             
-      End();
-
    }
 }
