@@ -1,15 +1,18 @@
 //
 // IUT de Nice / Departement informatique / Module APO-Java
-// Annee 2009_2010 - Package AWT
+// Annee 2008_2009 - Package SWING
 //
 // Classe CadreG - Visualisation d'un cadre entierement parametrable
 //
-// Edition A 		: cadre avec dictionnaire de configuration
+// Edition A 		: cadre AWT avec dictionnaire de configuration
 //    + Version 1.0.0	: parametrage de la partie statique
 //    + Version 1.1.0   : parametrage de la partie dynamique
 //    + Version 1.2.0   : externalisation du dictionnaire de configuration
 //                        (sans la partie dynamique)
 //    + Version 1.3.0   : introduction de la gestion de parametres par defaut
+//
+// Edition B        : cadre SWING avec dictionnaire de configuration
+//    + Version 2.0.0   : version initiale
 //
 // Auteur : A. Thuaire
 //
@@ -17,8 +20,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import javax.swing.*;
 
-public class CadreG extends Frame {
+public class CadreG extends JFrame {
 
    public CadreG (HashMap config) {
    	
@@ -29,13 +33,8 @@ public class CadreG extends Frame {
       setLocation(config);
       setBackground(config);
       setForeground(config);
-      setFont(config);
-      
-      // Description dynamique non parametree
-      //
-      addWindowListener (new WindowAdapter() {	 
-         public void windowClosing (WindowEvent e) {System.exit(0);}});   
-      }
+      setFont(config);   
+   }
    
    private void setSize(HashMap config) {
    Dimension tailleEcran;
@@ -57,9 +56,9 @@ public class CadreG extends Frame {
    private void setTitle(HashMap config) {
    Object w;
    
-      if (config==null) {setTitle("(AWT) - Bandeau par defaut"); return;}
+      if (config==null) {setTitle("(SWING) - Bandeau par defaut"); return;}
       w= config.get("titre");
-      if (w==null) {setTitle("(AWT) - Classe CadreG - V 1.3.0"); return;}
+      if (w==null) {setTitle("(SWING) - Classe CadreG - V 2.0.0"); return;}
       setTitle((String)w);
    }
    
@@ -81,7 +80,7 @@ public class CadreG extends Frame {
       if (config==null) {setBackground(Color.white); return;}
       w= config.get("arrierePlan");
       if (w==null) {setBackground(Color.yellow); return;}
-      setBackground((Color)w);
+      getContentPane().setBackground((Color)w);
    }
    
    private void setForeground(HashMap config) {
@@ -90,7 +89,7 @@ public class CadreG extends Frame {
       if (config==null) {setForeground(Color.red); return;}
       w= config.get("avantPlan");
       if (w==null) {setForeground(Color.black); return;}
-      setForeground((Color)w);
+      getContentPane().setForeground((Color)w);
    }
    
    private void setFont(HashMap config) {
@@ -106,7 +105,7 @@ public class CadreG extends Frame {
    	
       // Charger le dictionnaire de configuration
       //   	
-      HashMap config= (HashMap) Config.load("ConfigCadreG", "1.3.0");
+      HashMap config= (HashMap) Config.load("ConfigCadreG", "2.0.0");
          
       // Creer et montrer le cadre
       //
